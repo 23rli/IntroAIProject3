@@ -197,4 +197,52 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
+        states = self.mdp.getStates()
+
+        # Step 1: Compute predecessors of all states
+        predecessors = dict()
+        for state in states:
+            predecessors[state] = set()
+        for state in states:
+            for action in self.mdp.getPossibleActions(state):
+                for next_state, prob in self.mdp.getTransitionStatesAndProbs(state, action):
+                    if prob > 0:
+                        predecessors[next_state].add(state)
+
+        # Step 2: Initialize an empty priority queue
+        priority_queue = util.PriorityQueue()
+
+        # Step 3: Compute initial differences and populate the priority queue
+        for state in states:
+            if self.mdp.isTerminal(state):
+                continue
+            actions = self.mdp.getPossibleActions(state)
+            if not actions:
+                continue
+            max_q = max([self.computeQValueFromValues(state, action) for action in actions])
+            diff = abs(self.values[state] - max_q)
+            priority_queue.update(state, -diff)
+
+        # Step 4: Perform value iteration
+        for i in range(self.iterations):
+            if priority_queue.isEmpty():
+                break
+            state = priority_queue.pop()
+
+            if not self.mdp.isTerminal(state):
+                actions = self.mdp.getPossibleActions(state)
+                if actions:
+                    max_q = max([self.computeQValueFromValues(state, action) for action in actions])
+                    self.values[state] = max_q
+
+            for p in predecessors[state]:
+                if self.mdp.isTerminal(p):
+                    continue
+                actions = self.mdp.getPossibleActions(p)
+                if not actions:
+                    continue
+                max_q = max([self.computeQValueFromValues(p, action) for action in actions])
+                diff = abs(self.values[p] - max_q)
+                if diff > self.theta:
+                    priority_queue.update(p, -diff)
 
