@@ -44,7 +44,7 @@ class QLearningAgent(ReinforcementAgent):
 
         "*** YOUR CODE HERE ***"
         # --- IMPLEMENTATION START ---
-        self.qValues = util.Counter()  # Automatically returns 0.0 for missing keys
+        self.valueofQ = util.Counter()  #returns 0 for missing keys
         # --- IMPLEMENTATION END ---
 
     def getQValue(self, state, action):
@@ -55,7 +55,7 @@ class QLearningAgent(ReinforcementAgent):
         """
         "*** YOUR CODE HERE ***"
         # --- IMPLEMENTATION START ---
-        return self.qValues[(state, action)]
+        return self.valueofQ[(state, action)]
         # --- IMPLEMENTATION END ---
 
 
@@ -68,9 +68,12 @@ class QLearningAgent(ReinforcementAgent):
         """
         "*** YOUR CODE HERE ***"
         # --- IMPLEMENTATION START ---
+        # First, we check if there are any actions we can take from this state.
         legalActions = self.getLegalActions(state)
+        # If there aren't just return 0.
         if not legalActions:
             return 0.0
+        # But if there are actions, we look at all of them and pick the one with the highest Q-value.
         return max(self.getQValue(state, a) for a in legalActions)
         # --- IMPLEMENTATION END ---
 
@@ -87,7 +90,9 @@ class QLearningAgent(ReinforcementAgent):
             return None
 
         max_q = self.computeValueFromQValues(state)
+        # Collect all actions that have this highest Q-value
         bestActions = [a for a in legalActions if self.getQValue(state, a) == max_q]
+        # Randomly choose one of the best actions to break ties
         return random.choice(bestActions)
         # --- IMPLEMENTATION END ---
 
@@ -130,6 +135,7 @@ class QLearningAgent(ReinforcementAgent):
           it will be called on your behalf
         """
         "*** YOUR CODE HERE ***"
+        # Calculate the sample: immediate reward + discounted future value estimate
         sample = reward + self.discount * self.computeValueFromQValues(nextState)
         self.qValues[(state, action)] = (1 - self.alpha) * self.getQValue(state, action) + self.alpha * sample
 
@@ -205,8 +211,11 @@ class ApproximateQAgent(PacmanQAgent):
            Should update your weights based on transition
         """
         "*** YOUR CODE HERE ***"
+        #Extract the feature vector
         features = self.featExtractor.getFeatures(state, action)
+        # Initialize the estimated value
         max_next_q = 0.0
+        # If there are legal actions in the next state do the max Q-value
         if self.getLegalActions(nextState):
             max_next_q = max([self.getQValue(nextState, a) for a in self.getLegalActions(nextState)])
         
